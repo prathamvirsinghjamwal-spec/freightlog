@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1B5E9E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Freight Log">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Freight Log</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root {
+    --brand: #1B5E9E;
+    --brand-light: #D6E7F8;
+    --brand-dark: #0C3F6B;
+    --bg: #F6F4ED;
+    --surface: #FFFFFF;
+    --bg-secondary: #EDEAE0;
+    --divider: #D6D3C8;
+    --text-primary: #1A1A1A;
+    --text-secondary: #666666;
+    --text-tertiary: #999999;
+    --success: #1D9E75;
+    --success-bg: #E1F5EE;
+    --warning: #BA7517;
+    --warning-bg: #FAEEDA;
+    --danger: #A32D2D;
+    --danger-bg: #FCEBEB;
+    --shadow: 0 2px 8px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --brand: #85B7EB;
+      --brand-light: #0C3F6B;
+      --brand-dark: #D6E7F8;
+      --bg: #121212;
+      --surface: #1E1E1E;
+      --bg-secondary: #252525;
+      --divider: #2A2A2A;
+      --text-primary: #F1F1F1;
+      --text-secondary: #A8A8A8;
+      --text-tertiary: #777777;
+      --success: #5DCAA5;
+      --success-bg: #0F6E56;
+      --warning: #EF9F27;
+      --warning-bg: #854F0B;
+      --danger: #F09595;
+      --danger-bg: #501313;
+      --shadow: 0 2px 8px rgba(0,0,0,0.4);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+    }
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overscroll-behavior: none;
+  }
+
+  body {
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    max-width: 600px;
+    margin: 0 auto;
+    background: var(--bg);
+  }
+
+  /* Top app bar */
+  .topbar {
+    background: var(--surface);
+    padding: calc(16px + var(--safe-top)) 16px 12px;
+    border-bottom: 1px solid var(--divider);
+  }
+  .topbar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .topbar-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--brand-light);
+    color: var(--brand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .topbar-title { font-size: 18px; font-weight: 600; margin: 0; }
+  .topbar-sub { font-size: 12px; color: var(--text-secondary); margin: 2px 0 0; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    background: var(--surface);
+    padding: 0 8px;
+    border-bottom: 1px solid var(--divider);
+  }
+  .tab {
+    flex: 1;
+    padding: 12px 8px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    font-family: inherit;
+  }
+  .tab.active {
+    color: var(--brand);
+    border-bottom-color: var(--brand);
+  }
+  .tab svg { vertical-align: -3px; margin-right: 4px; }
+
+  /* Page content */
+  .page {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    padding-bottom: calc(80px + var(--safe-bottom));
+    -webkit-overflow-scrolling: touch;
+  }
+  .page.hidden { display: none; }
+
+  /* Search bar */
+  .search-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .search-input {
+    flex: 1;
+    padding: 12px 14px;
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    font-size: 14px;
+    color: var(--text-primary);
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .search-input:focus { border-color: var(--brand); }
+  .filter-select {
+    padding: 12px 32px 12px 14px;
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23666'><path d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+
+  /* Entry card */
+  .entry-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--divider);
+  }
+  .entry-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    cursor: pointer;
+  }
+  .entry-info { flex: 1; min-width: 0; }
+  .entry-transporter {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .entry-receiver {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 2px 0 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .entry-amount {
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .entry-divider {
+    height: 1px;
+    background: var(--divider);
+    margin: 10px 0 8px;
+  }
+  .entry-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .entry-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .entry-meta-item svg { flex-shrink: 0; }
+  .entry-paid-section {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+  }
+  .entry-paid-label {
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .entry-paid-label.paid { color: var(--success); }
+  .entry-paid-label.unpaid { color: var(--text-secondary); }
+
+  /* Material-style switch */
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 34px;
+    height: 20px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .switch-track {
+    position: absolute;
+    inset: 0;
+    background: var(--divider);
+    border-radius: 10px;
+    transition: background 0.2s;
+  }
+  .switch-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    transition: left 0.2s;
+  }
+  .switch.on .switch-track { background: var(--success); }
+  .switch.on .switch-thumb { left: 16px; }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 60px 16px;
+    color: var(--text-secondary);
+  }
+  .empty-state svg { opacity: 0.4; margin-bottom: 12px; }
+  .empty-state p { margin: 4px 0; }
+  .empty-state-title { font-size: 14px; }
+  .empty-state-hint { font-size: 12px; color: var(--text-tertiary); }
+
+  /* FAB */
+  .fab {
+    position: fixed;
+    bottom: calc(20px + var(--safe-bottom));
+    right: 20px;
+    background: var(--brand);
+    color: white;
+    border: none;
+    border-radius: var(--radius-lg);
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: inherit;
+    z-index: 10;
+    transition: transform 0.1s;
+  }
+  .fab:active { transform: scale(0.96); }
+  @media (min-width: 600px) {
+    .fab { right: calc(50% - 280px); }
+  }
+
+  /* Stats page */
+  .month-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .month-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .month-btn:active { background: var(--bg-secondary); }
+  .month-label {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    border: 1px solid var(--divider);
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+  .stat-value {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0;
+  }
+  .stat-value.success { color: var(--success); }
+
+  .section-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin: 20px 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .chart-card {
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    border: 1px solid var(--divider);
+  }
+  .chart-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 120px;
+  }
+  .chart-bar {
+    flex: 1;
+    min-width: 6px;
+    background: var(--brand);
+    border-radius: 2px 2px 0 0;
+    opacity: 0.85;
+    transition: opacity 0.15s;
+  }
+  .chart-bar:hover { opacity: 1; }
+  .chart-axis {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    margin-top: 6px;
+  }
+
+  .top-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .top-item {
+    background: var(--surface);
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-md);
+    padding: 12px;
+  }
+  .top-item-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .top-item-bar {
+    height: 4px;
+    background: var(--bg-secondary);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .top-item-bar-fill {
+    height: 100%;
+    background: var(--brand);
+    transition: width 0.3s;
+  }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 100;
+    animation: fadeIn 0.2s;
+  }
+  .modal-backdrop.open { display: flex; }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .modal {
+    background: var(--surface);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    width: 100%;
+    max-width: 600px;
+    max-height: 92vh;
+    overflow-y: auto;
+    padding: 16px 20px calc(20px + var(--safe-bottom));
+    animation: slideUp 0.25s ease-out;
+    -webkit-overflow-scrolling: touch;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-handle {
+    width: 40px;
+    height: 4px;
+    background: var(--divider);
+    border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+  }
+  .modal-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-close:active { background: var(--bg-secondary); }
+
+  .form-group { margin-bottom: 12px; }
+  .form-label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .form-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    font-size: 14px;
+    color: var(--text-primary);
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-input:focus { border-color: var(--brand); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .form-paid-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-secondary);
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    margin-top: 8px;
+  }
+  .form-paid-row .switch { width: 44px; height: 24px; }
+  .form-paid-row .switch-track { border-radius: 12px; }
+  .form-paid-row .switch-thumb { width: 20px; height: 20px; }
+  .form-paid-row .switch.on .switch-thumb { left: 22px; }
+  .form-paid-title { font-size: 14px; font-weight: 500; margin: 0; }
+  .form-paid-sub { font-size: 12px; color: var(--text-secondary); margin: 0; }
+
+  .btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary {
+    background: var(--brand);
+    color: white;
+    margin-top: 16px;
+  }
+  .btn-danger {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--divider);
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  /* Install banner */
+  .install-banner {
+    background: var(--brand-light);
+    color: var(--brand-dark);
+    padding: 10px 14px;
+    margin: 8px 12px 0;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+  }
+  .install-banner.show { display: flex; }
+  .install-banner button {
+    background: var(--brand);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: inherit;
+    margin-left: auto;
+    cursor: pointer;
+  }
+  .install-banner .dismiss {
+    background: transparent;
+    color: var(--brand-dark);
+    padding: 4px 8px;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: calc(80px + var(--safe-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text-primary);
+    color: var(--bg);
+    padding: 10px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 200;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 0.95; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="topbar">
+    <div class="topbar-row">
+      <div class="topbar-icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1h2.5a2 2 0 0 1 1.6.8L22 8.5V17a2 2 0 0 1-2 2h-1a3 3 0 0 1-6 0H9a3 3 0 0 1-6 0H3a1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1V4zm13 4v3h4.5l-2.1-2.8a1 1 0 0 0-.8-.4H16zM6 16a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>
+      </div>
+      <div>
+        <p class="topbar-title">Freight Log</p>
+        <p class="topbar-sub" id="header-sub">Loading…</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="install-banner" id="install-banner">
+    <span>📲 Install this app on your home screen</span>
+    <button class="dismiss" id="install-dismiss" type="button">Later</button>
+    <button id="install-btn" type="button">Install</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="entries" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+      Entries
+    </button>
+    <button class="tab" data-tab="stats" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 9.2h3V19H5zm5.6-4.2h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>
+      Statistics
+    </button>
+  </div>
+
+  <div class="page" id="page-entries">
+    <div class="search-row">
+      <input class="search-input" id="search-input" type="search" placeholder="Search transporter or receiver…" autocomplete="off">
+      <select class="filter-select" id="filter-select" aria-label="Filter">
+        <option value="all">All</option>
+        <option value="paid">Paid</option>
+        <option value="unpaid">Pending</option>
+      </select>
+    </div>
+    <div id="entries-list"></div>
+    <div class="empty-state" id="empty-state" style="display:none">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm0 9.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-2.62v8.31z"/></svg>
+      <p class="empty-state-title">No entries yet</p>
+      <p class="empty-state-hint">Tap + to add your first trip</p>
+    </div>
+  </div>
+
+  <div class="page hidden" id="page-stats">
+    <div class="month-nav">
+      <button class="month-btn" id="prev-month" type="button" aria-label="Previous month">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+      </button>
+      <p class="month-label" id="current-month">—</p>
+      <button class="month-btn" id="next-month" type="button" aria-label="Next month">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+      </button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+          Total trips
+        </div>
+        <p class="stat-value" id="stat-trips">0</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19 15.18V7c0-2.21-1.79-4-4-4s-4 1.79-4 4v10c0 1.1-.9 2-2 2s-2-.9-2-2V8.82C8.16 8.4 9 7.3 9 6c0-1.66-1.34-3-3-3S3 4.34 3 6c0 1.3.84 2.4 2 2.82V17c0 2.21 1.79 4 4 4s4-1.79 4-4V7c0-1.1.9-2 2-2s2 .9 2 2v8.18c-1.16.42-2 1.52-2 2.82 0 1.66 1.34 3 3 3s3-1.34 3-3c0-1.3-.84-2.4-2-2.82z"/></svg>
+          Total pheras
+        </div>
+        <p class="stat-value" id="stat-pheras">0</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M21 16.5c0 .38-.21.71-.53.88l-7.9 4.44c-.16.12-.36.18-.57.18s-.41-.06-.57-.18l-7.9-4.44A1.01 1.01 0 0 1 3 16.5v-9c0-.38.21-.71.53-.88l7.9-4.44c.16-.12.36-.18.57-.18s.41.06.57.18l7.9 4.44c.32.17.53.5.53.88v9zM12 4.15L6.04 7.5 12 10.85 17.96 7.5 12 4.15zM5 15.91l6 3.38v-6.71L5 9.21v6.7zm14 0v-6.7l-6 3.37v6.71l6-3.38z"/></svg>
+          Total nags
+        </div>
+        <p class="stat-value" id="stat-nags">0</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          Paid trips
+        </div>
+        <p class="stat-value success" id="stat-paid">0</p>
+      </div>
+    </div>
+
+    <p class="section-label">Daily trip count</p>
+    <div class="chart-card">
+      <div class="chart-bars" id="chart-bars"></div>
+      <div class="chart-axis" id="chart-axis"></div>
+      <p id="chart-empty" style="text-align:center;color:var(--text-secondary);font-size:13px;margin:30px 0;display:none">No data for this month</p>
+    </div>
+
+    <p class="section-label">Top transporters by trips</p>
+    <div class="top-list" id="top-transporters"></div>
+    <p id="top-empty" style="text-align:center;color:var(--text-secondary);font-size:13px;margin:20px 0;display:none">No transporters yet</p>
+  </div>
+
+  <button class="fab" id="fab-add" type="button">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
+    Add Entry
+  </button>
+</div>
+
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <p class="modal-title" id="modal-title">Add Entry</p>
+      <button class="modal-close" id="modal-close" type="button" aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="f-date">Date</label>
+      <input class="form-input" type="date" id="f-date">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="f-transporter">Transporter name</label>
+      <input class="form-input" type="text" id="f-transporter" placeholder="e.g. Singh Transport" autocapitalize="words">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="f-receiver">Receiver name</label>
+      <input class="form-input" type="text" id="f-receiver" placeholder="e.g. Sharma Traders" autocapitalize="words">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="f-nags">No. of nags</label>
+        <input class="form-input" type="number" id="f-nags" placeholder="0" min="0" inputmode="numeric">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="f-pheras">Pheras / day</label>
+        <input class="form-input" type="number" id="f-pheras" placeholder="0" min="0" inputmode="numeric">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="f-amount">Freight amount (₹)</label>
+      <input class="form-input" type="number" id="f-amount" placeholder="0" min="0" inputmode="decimal">
+    </div>
+    <div class="form-paid-row">
+      <div>
+        <p class="form-paid-title">Freight paid</p>
+        <p class="form-paid-sub">Mark as received</p>
+      </div>
+      <div class="switch" id="paid-switch" role="switch" aria-checked="false" tabindex="0">
+        <div class="switch-track"></div>
+        <div class="switch-thumb"></div>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="save-btn" type="button">Save entry</button>
+    <button class="btn btn-danger" id="delete-btn" type="button" style="display:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+      Delete entry
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
